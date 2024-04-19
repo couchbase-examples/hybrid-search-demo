@@ -11,6 +11,7 @@ import couchbase.search as search
 from couchbase.options import SearchOptions
 from couchbase.vector_search import VectorQuery, VectorSearch
 from openai import OpenAI
+from dotenv import load_dotenv
 
 EMBEDDING_MODEL = "text-embedding-3-small"
 
@@ -179,6 +180,7 @@ if __name__ == "__main__":
     )
 
     # Load environment variables
+    load_dotenv()
     DB_CONN_STR = os.getenv("DB_CONN_STR")
     DB_USERNAME = os.getenv("DB_USERNAME")
     DB_PASSWORD = os.getenv("DB_PASSWORD")
