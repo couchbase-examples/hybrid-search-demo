@@ -156,7 +156,6 @@ def search_couchbase(
                 limit=k,
                 fields=fields,
                 raw=search_options,
-                explain=True,
             ),
         )
 
