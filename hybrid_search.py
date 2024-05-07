@@ -11,9 +11,6 @@ import couchbase.search as search
 from couchbase.options import SearchOptions
 from couchbase.vector_search import VectorQuery, VectorSearch
 from openai import OpenAI
-from dotenv import load_dotenv
-
-EMBEDDING_MODEL = "text-embedding-3-small"
 
 
 def check_environment_variable(variable_name):
@@ -179,7 +176,6 @@ if __name__ == "__main__":
     )
 
     # Load environment variables
-    load_dotenv()
     DB_CONN_STR = os.getenv("DB_CONN_STR")
     DB_USERNAME = os.getenv("DB_USERNAME")
     DB_PASSWORD = os.getenv("DB_PASSWORD")
@@ -187,6 +183,11 @@ if __name__ == "__main__":
     DB_SCOPE = os.getenv("DB_SCOPE")
     DB_COLLECTION = os.getenv("DB_COLLECTION")
     INDEX_NAME = os.getenv("INDEX_NAME")
+    EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
+
+    # Use text-embedding-3-small as the embedding model if not set
+    if not EMBEDDING_MODEL:
+        EMBEDDING_MODEL = "text-embedding-3-small"
 
     # Ensure that all environment variables are set
     check_environment_variable("OPENAI_API_KEY")

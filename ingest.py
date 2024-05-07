@@ -10,15 +10,20 @@ import uuid
 import pandas as pd
 
 
-load_dotenv()
 # Load environment variables
+load_dotenv()
 DB_CONN_STR = os.getenv("DB_CONN_STR")
 DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_BUCKET = os.getenv("DB_BUCKET")
 DB_SCOPE = os.getenv("DB_SCOPE")
 DB_COLLECTION = os.getenv("DB_COLLECTION")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
 MOVIES_DATASET = "imdb_top_1000.csv"
+
+# Use text-embedding-3-small as the embedding model if not set
+if not EMBEDDING_MODEL:
+    EMBEDDING_MODEL = "text-embedding-3-small"
 
 
 def check_environment_variable(variable_name):
@@ -56,8 +61,7 @@ def connect_to_couchbase(connection_string, db_username, db_password):
 
 def generate_embeddings(client, input_data):
     """Generate OpenAI embeddings for the input data"""
-    model = "text-embedding-3-small"
-    response = client.embeddings.create(input=input_data, model=model)
+    response = client.embeddings.create(input=input_data, model=EMBEDDING_MODEL)
     return response.data[0].embedding
 
 
