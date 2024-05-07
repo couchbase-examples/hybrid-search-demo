@@ -5,4 +5,4 @@ openai==1.19.0
 pandas==2.2.2
 python-dotenv==1.0.1
 streamlit==1.33.0
-tqdm==4.66.2
+tqdm==4.66.4
