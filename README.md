@@ -25,12 +25,12 @@ The hybrid search can be performed using both the Couchbase Python SDK & the Lan
   > For the ingestion script, the same environment variables need to be set in the environment (using `.env` file from `.env.example`) as it runs outside the Streamlit environment.
 
   ```
-  OPENAI_API_KEY = "<open_ai_api_key"
-  DB_CONN_STR = "<connection_string_for_couchbase_cluster"
+  OPENAI_API_KEY = "<open_ai_api_key>"
+  DB_CONN_STR = "<connection_string_for_couchbase_cluster>"
   DB_USERNAME = "<username_for_couchbase_cluster>"
   DB_PASSWORD = "<password_for_couchbase_cluster>"
-  DB_BUCKET = "<name_of_bucket_to_store_documents"
-  DB_SCOPE = "<name_of_scope_to_store_documents"
+  DB_BUCKET = "<name_of_bucket_to_store_documents>"
+  DB_SCOPE = "<name_of_scope_to_store_documents>"
   DB_COLLECTION = "<name_of_collection_to_store_documents>"
   INDEX_NAME = "<name_of_search_index_with_vector_support>"
   EMBEDDING_MODEL = "text-embedding-3-small" # OpenAI embedding model to use to encode the documents
