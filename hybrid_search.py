@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Tuple
 import streamlit as st
-from langchain_community.vectorstores import CouchbaseVectorStore
+from langchain_couchbase.vectorstores import CouchbaseVectorStore
 import os
 from langchain_openai import OpenAIEmbeddings
 from couchbase.cluster import Cluster
