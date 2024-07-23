@@ -1,4 +1,4 @@
-langchain-couchbase==0.0.1
+langchain-couchbase==0.1.0
 langchain-openai==0.1.17
 pandas==2.2.2
 python-dotenv==1.0.1
