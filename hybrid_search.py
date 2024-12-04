@@ -271,7 +271,7 @@ if __name__ == "__main__":
                 with col1:
                     st.image(
                         cleanup_poster_url(movie.metadata["Poster_Link"]),
-                        use_column_width=True,
+                        use_container_width=True,
                     )
                 with col2:
                     st.write("Synopsis:", movie.page_content)
@@ -301,7 +301,8 @@ if __name__ == "__main__":
                 col1, col2 = st.columns(2)
                 with col1:
                     st.image(
-                        cleanup_poster_url(movie["Poster_Link"]), use_column_width=True
+                        cleanup_poster_url(movie["Poster_Link"]),
+                        use_container_width=True,
                     )
                 with col2:
                     st.write("Synopsis:", movie["Overview"])
