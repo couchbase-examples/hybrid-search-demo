@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Tuple
 import streamlit as st
-from langchain_couchbase.vectorstores import CouchbaseVectorStore
+from langchain_couchbase.vectorstores import CouchbaseSearchVectorStore
 import os
 from langchain_openai import OpenAIEmbeddings
 from couchbase.cluster import Cluster
@@ -62,9 +62,9 @@ def get_couchbase_vector_store(
     index_name,
     text_key,
     embedding_key,
-) -> CouchbaseVectorStore:
+) -> CouchbaseSearchVectorStore:
     """Return the Couchbase vector store"""
-    vector_store = CouchbaseVectorStore(
+    vector_store = CouchbaseSearchVectorStore(
         cluster=_cluster,
         bucket_name=db_bucket,
         scope_name=db_scope,
