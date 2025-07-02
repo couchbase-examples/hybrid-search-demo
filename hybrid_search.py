@@ -80,7 +80,7 @@ def get_couchbase_vector_store(
 @st.cache_resource
 def create_filter(
     year_range: Tuple[int], rating: float
-) -> search.SearchQuery:
+) -> Tuple[search.SearchQuery, str]:
     """Create a prefilter for the vector search"""
     # Fields in the document used for search
     year_field = "Released_Year"
@@ -99,7 +99,7 @@ def create_filter(
         )
         filter_operations.append(year_query)
         filter_descriptions.append(f"""NumericRangeQuery(
-            field=year_field,
+            field={year_field},
             min={year_range[0]},
             max={year_range[1]},
             inclusive_min=True,
@@ -122,6 +122,8 @@ def create_filter(
 
     if len(filter_descriptions) > 1:
         filter_descriptions = "ConjunctionQuery(" + ", ".join(filter_descriptions) + " )"
+    else:
+        filter_descriptions = filter_descriptions[0]
 
     return filters, filter_descriptions
 
@@ -261,10 +263,6 @@ if __name__ == "__main__":
     submit = st.button("Submit")
 
     if submit:
-        # Fetch the filters
-        if enable_filters:
-            search_filters, _ = create_filter(year_range, rating)
-
         # Search using the LangChain interface
         if is_langchain:
             # Perform the search using LangChain
