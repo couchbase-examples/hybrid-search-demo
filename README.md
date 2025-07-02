@@ -2,7 +2,7 @@
 
 This is a demo app built to perform hybrid search using the Vector Search capabilities of Couchbase. The demo allows users to search for movies based on the synopsis or overview of the movie using both the native [Couchbase Python SDK](https://docs.couchbase.com/python-sdk/current/howtos/full-text-searching-with-sdk.html) and using the [LangChain Vector Store integration](https://python.langchain.com/docs/integrations/vectorstores/couchbase/).
 
-> Note that you need Couchbase Server 7.6 or higher for Vector Search.
+> Note that you need Couchbase Server 7.6 or higher for Vector Search and 7.6.4 or higher for pre-filter support.
 
 ### How does it work?
 

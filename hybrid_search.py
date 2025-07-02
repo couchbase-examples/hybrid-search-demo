@@ -79,42 +79,54 @@ def get_couchbase_vector_store(
 
 @st.cache_resource
 def create_filter(
-    year_range: Tuple[int], rating: float, search_in_title: bool, title: str
-) -> Dict[str, Any]:
-    """Create a filter for the hybrid search"""
+    year_range: Tuple[int], rating: float
+) -> Tuple[search.SearchQuery, str]:
+    """Create a prefilter for the vector search"""
     # Fields in the document used for search
     year_field = "Released_Year"
     rating_field = "IMDB_Rating"
-    title_field = "Series_Title"
 
-    filter = {}
+    filter_descriptions = []
     filter_operations = []
+
     if year_range:
-        year_query = {
-            "min": year_range[0],
-            "max": year_range[1],
-            "inclusive_min": True,
-            "inclusive_max": True,
-            "field": year_field,
-        }
+        year_query = search.NumericRangeQuery(
+            field=year_field,
+            min=year_range[0],
+            max=year_range[1],
+            inclusive_min=True,
+            inclusive_max=True,
+        )
         filter_operations.append(year_query)
+        filter_descriptions.append(f"""NumericRangeQuery(
+            field={year_field},
+            min={year_range[0]},
+            max={year_range[1]},
+            inclusive_min=True,
+            inclusive_max=True
+        )""") 
     if rating:
-        filter_operations.append(
-            {
-                "min": rating,
-                "inclusive_min": False,
-                "field": rating_field,
-            }
+        rating_query = search.NumericRangeQuery(
+            field=rating_field,
+            min=rating,
+            inclusive_min=False,
         )
-    if search_in_title:
-        filter_operations.append(
-            {
-                "match_phrase": title,
-                "field": title_field,
-            }
-        )
-    filter["query"] = {"conjuncts": filter_operations}
-    return filter
+        filter_operations.append(rating_query)
+        filter_descriptions.append(f"""NumericRangeQuery(
+            field={rating_field},
+            min={rating},
+            inclusive_min=False
+        )""")
+
+    filters = search.ConjunctionQuery(*filter_operations)
+
+    if len(filter_descriptions) > 1:
+        filter_descriptions = "ConjunctionQuery(" + ", ".join(filter_descriptions) + " )"
+    else:
+        filter_descriptions = filter_descriptions[0]
+
+    return filters, filter_descriptions
+
 
 
 def search_couchbase(
@@ -125,7 +137,7 @@ def search_couchbase(
     search_text: str,
     k: int = 5,
     fields: List[str] = ["*"],
-    search_options: Dict[str, Any] = {},
+    search_filters: search.SearchQuery = None,
 ):
     """Hybrid search using Python SDK in couchbase"""
     # Generate vector embeddings to search with
@@ -135,9 +147,10 @@ def search_couchbase(
     search_req = search.SearchRequest.create(
         VectorSearch.from_vector_query(
             VectorQuery(
-                embedding_key,
-                search_embedding,
-                k,
+                field_name=embedding_key,
+                vector=search_embedding,
+                prefilter=search_filters,
+                num_candidates=k,
             )
         )
     )
@@ -152,7 +165,6 @@ def search_couchbase(
             SearchOptions(
                 limit=k,
                 fields=fields,
-                raw=search_options,
             ),
         )
 
@@ -225,6 +237,9 @@ if __name__ == "__main__":
         embedding_key="Overview_embedding",
     )
 
+    search_filters = None
+    search_filter_descriptions = None
+
     # UI Elements
     text = st.text_input("Find your movie")
     with st.sidebar:
@@ -240,26 +255,21 @@ if __name__ == "__main__":
         if enable_filters:
             year_range = st.slider("Released Year", 1900, 2024, (1900, 2024))
             rating = st.number_input("Minimum IMDB Rating", 0.0, 10.0, 0.0, step=1.0)
-            search_in_title = st.checkbox("Search in Title?")
             show_filter = st.checkbox("Show filter")
-            hybrid_search_filter = create_filter(
-                year_range, rating, search_in_title, text
-            )
+            search_filters, search_filter_descriptions = create_filter(year_range, rating)
             if show_filter:
-                st.json(hybrid_search_filter)
+                st.write(search_filter_descriptions)
 
     submit = st.button("Submit")
 
     if submit:
-        # Fetch the filters
-        if enable_filters:
-            search_filters = create_filter(year_range, rating, search_in_title, text)
-
         # Search using the LangChain interface
         if is_langchain:
             # Perform the search using LangChain
             docs = vector_store.similarity_search_with_score(
-                text, k=no_of_results, search_options=search_filters
+                text,
+                k=no_of_results,
+                filter=search_filters,
             )
 
             for doc in docs:
@@ -291,7 +301,7 @@ if __name__ == "__main__":
                 "Overview_embedding",
                 text,
                 k=no_of_results,
-                search_options=search_filters,
+                search_filters=search_filters,
             )
             for doc in results:
                 movie, score = doc
