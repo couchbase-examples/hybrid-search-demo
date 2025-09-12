@@ -1,5 +1,5 @@
 langchain-couchbase==0.4.0
-langchain-openai==0.3.28
+langchain-openai==0.3.33
 pandas==2.3.2
 python-dotenv==1.1.1
 streamlit==1.49.1
