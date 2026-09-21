@@ -1,5 +1,6 @@
 import unittest
 from pathlib import Path
+import re
 
 import pandas as pd
 
@@ -50,6 +51,38 @@ class HybridSearchHelperTests(unittest.TestCase):
                 "Runtime",
             }.issubset(data.columns)
         )
+
+    def test_sample_configuration_files_document_required_runtime_keys(self):
+        repo_root = Path(__file__).resolve().parents[1]
+        required_keys = {
+            "OPENAI_API_KEY",
+            "DB_CONN_STR",
+            "DB_USERNAME",
+            "DB_PASSWORD",
+            "DB_BUCKET",
+            "DB_SCOPE",
+            "DB_COLLECTION",
+            "INDEX_NAME",
+            "EMBEDDING_MODEL",
+        }
+
+        env_example_keys = _keys_from_assignment_file(repo_root / ".env.example")
+        streamlit_example_keys = _keys_from_assignment_file(
+            repo_root / ".streamlit" / "secrets.example.toml"
+        )
+
+        self.assertTrue(required_keys.issubset(env_example_keys))
+        self.assertTrue(required_keys.issubset(streamlit_example_keys))
+
+
+def _keys_from_assignment_file(path):
+    key_pattern = re.compile(r"^([A-Z0-9_]+)\s*=")
+    keys = set()
+    for line in path.read_text().splitlines():
+        match = key_pattern.match(line.strip())
+        if match:
+            keys.add(match.group(1))
+    return keys
 
 
 if __name__ == "__main__":
