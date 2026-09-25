@@ -207,3 +207,28 @@ The hybrid search can be performed using both the Couchbase Python SDK & the Lan
 - #### Run the application
 
   `streamlit run hybrid_search.py`
+
+### Validation approach
+
+The lightweight smoke tests can be run without OpenAI or Couchbase credentials:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+These tests validate the offline helper code, the included IMDB CSV shape, and the
+sample configuration contract. They intentionally do not open a Couchbase bucket,
+call OpenAI, or require a Search index.
+
+Manual end-to-end validation requires all of the runtime prerequisites above:
+
+- a Couchbase Server 7.6+ cluster with the `movies` bucket,
+- the `_default` scope and `_default` collection,
+- the `movies-search-demo` Search index,
+- movie documents ingested with `python ingest.py`, including embeddings, and
+- a valid OpenAI API key for the configured embedding model.
+
+If the Streamlit page starts but displays a missing-bucket or missing-index error,
+that validates only application startup and dependency import compatibility. It is
+not a complete functional hybrid-search pass until the bucket, collection, index,
+and ingested embeddings are present.
