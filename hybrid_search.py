@@ -12,6 +12,9 @@ from couchbase.options import SearchOptions
 from couchbase.vector_search import VectorQuery, VectorSearch
 from openai import OpenAI
 
+# Default OpenAI embedding model; must match the model used by ingest.py.
+DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
+
 
 def check_environment_variable(variable_name):
     """Check if environment variable is set"""
@@ -22,9 +25,9 @@ def check_environment_variable(variable_name):
         st.stop()
 
 
-def generate_embeddings(client, input_data):
+def generate_embeddings(client, input_data, model=DEFAULT_EMBEDDING_MODEL):
     """Generate OpenAI embeddings for the input data"""
-    response = client.embeddings.create(input=input_data, model=EMBEDDING_MODEL)
+    response = client.embeddings.create(input=input_data, model=model)
     return response.data[0].embedding
 
 
@@ -138,10 +141,13 @@ def search_couchbase(
     k: int = 5,
     fields: List[str] = ["*"],
     search_filters: search.SearchQuery = None,
+    embedding_model: str = DEFAULT_EMBEDDING_MODEL,
 ):
     """Hybrid search using Python SDK in couchbase"""
     # Generate vector embeddings to search with
-    search_embedding = generate_embeddings(embedding_client, search_text)
+    search_embedding = generate_embeddings(
+        embedding_client, search_text, model=embedding_model
+    )
 
     # Create the search request
     search_req = search.SearchRequest.create(
@@ -155,27 +161,18 @@ def search_couchbase(
         )
     )
 
-    docs_with_score = []
+    # Perform the search
+    search_iter = db_scope.search(
+        index_name,
+        search_req,
+        SearchOptions(
+            limit=k,
+            fields=fields,
+        ),
+    )
 
-    try:
-        # Perform the search
-        search_iter = db_scope.search(
-            index_name,
-            search_req,
-            SearchOptions(
-                limit=k,
-                fields=fields,
-            ),
-        )
-
-        # Parse the results
-        for row in search_iter.rows():
-            score = row.score
-            docs_with_score.append((row.fields, score))
-    except Exception as e:
-        raise e
-
-    return docs_with_score
+    # Parse the results
+    return [(row.fields, row.score) for row in search_iter.rows()]
 
 
 if __name__ == "__main__":
@@ -195,11 +192,8 @@ if __name__ == "__main__":
     DB_SCOPE = os.getenv("DB_SCOPE")
     DB_COLLECTION = os.getenv("DB_COLLECTION")
     INDEX_NAME = os.getenv("INDEX_NAME")
-    EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
-
-    # Use text-embedding-3-small as the embedding model if not set
-    if not EMBEDDING_MODEL:
-        EMBEDDING_MODEL = "text-embedding-3-small"
+    # Use the default embedding model if not set
+    EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL") or DEFAULT_EMBEDDING_MODEL
 
     # Ensure that all environment variables are set
     check_environment_variable("OPENAI_API_KEY")
@@ -302,6 +296,7 @@ if __name__ == "__main__":
                 text,
                 k=no_of_results,
                 search_filters=search_filters,
+                embedding_model=EMBEDDING_MODEL,
             )
             for doc in results:
                 movie, score = doc
